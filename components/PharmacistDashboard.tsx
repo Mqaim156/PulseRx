@@ -11,6 +11,8 @@ const API_BASE = (
     : 'https://pulserx.onrender.com'
 ).replace(/\/$/, ''); // Remove trailing slash if exists
 
+console.log('🔍 API_BASE is set to:', API_BASE);
+console.log('🔍 Full patients URL will be:', `${API_BASE}/api/patients`);
 
 // --- Types for visits / SOAP note coming from backend ---
 interface ClinicalNote {
@@ -55,11 +57,13 @@ const PharmacistDashboard: React.FC = () => {
       setPatientsError(null);
       try {
         const res = await fetch(`${API_BASE}/api/patients`);
+        console.log('🔍 Response status:', res.status);
         if (!res.ok) {
           const text = await res.text();
           throw new Error(text || `Request failed with status ${res.status}`);
         }
         const data = await res.json();
+        console.log('🔍 Received data:', data);
         setPatients(Array.isArray(data.patients) ? data.patients : []);
       } catch (err) {
         setPatientsError(
