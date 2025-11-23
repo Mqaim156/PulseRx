@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Lock, Mail, User, Briefcase } from 'lucide-react';
 
-const API_BASE = 'https://pulserx.onrender.com'.replace(/\/$/, '');
-
+const API_BASE = 'http://localhost:4000';
 interface SignupProps {
   onLogin: (role: 'patient' | 'pharmacist') => void;
   onNavigateLogin: () => void;

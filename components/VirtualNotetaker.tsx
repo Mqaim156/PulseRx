@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, Square, Loader2, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 
-const API_BASE = 'https://pulserx.onrender.com'.replace(/\/$/, '');
-
+const API_BASE = 'http://localhost:4000';
 interface VirtualNotetakerProps {
   patientName: string;
   onAnalysisStatusChange?: (
