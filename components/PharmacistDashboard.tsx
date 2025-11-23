@@ -5,7 +5,7 @@ import { MARIA_BP_DATA } from '../constants';
 import { Patient } from '../types';
 import VirtualNotetaker from './VirtualNotetaker';
 
-const API_BASE = 'https://pulserx.onrender.com'.replace(/\/$/, '');
+const API_BASE = 'https://pulserx.onrender.com';
 
 console.log('🔍 API_BASE is set to:', API_BASE);
 console.log('🔍 Full patients URL will be:', `${API_BASE}/api/patients`);
