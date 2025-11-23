@@ -1,4 +1,4 @@
-// server.js (ESM)
+// server.js (ESM) - FIXED VERSION
 
 // --- Imports ---
 import express from 'express';
@@ -9,6 +9,51 @@ import { GoogleGenAI } from '@google/genai';
 // --- Basic app setup ---
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// --- CORS Configuration (MUST come BEFORE routes) ---
+const corsOptions = {
+  origin: [
+    'https://mqaim156.github.io/PulseRx',  // ⚠️ REPLACE with your actual GitHub Pages URL
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:4173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+app.use(express.json({ limit: '50mb' }));
+
+// --- Health Check Endpoint (Important for Render) ---
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    message: 'PulseRx Server is running',
+    mongodb: client.topology?.isConnected() ? 'connected' : 'disconnected'
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'PulseRx API Server',
+    version: '1.0.0',
+    endpoints: [
+      'GET /health',
+      'GET /api/patients',
+      'POST /api/patients',
+      'GET /api/visits',
+      'POST /api/visits',
+      'GET /api/bp-readings/latest',
+      'GET /api/bp-readings/trend',
+      'POST /api/bp-readings'
+    ]
+  });
+});
 
 // --- MongoDB setup ---
 const MONGO_URI =
@@ -27,18 +72,17 @@ async function getPatientsCollection() {
   return db.collection('patients');
 }
 
-
 // Helper to get the visits collection
 async function getVisitsCollection() {
   if (!client.topology || !client.topology.isConnected()) {
     await client.connect();
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB (visits)');
   }
   const db = client.db('medical_hackathon_db');
   return db.collection('visits');
 }
 
-// NEW: helper to get BP readings collection
+// Helper to get BP readings collection
 async function getBpCollection() {
   if (!client.topology || !client.topology.isConnected()) {
     await client.connect();
@@ -48,26 +92,19 @@ async function getBpCollection() {
   return db.collection('bp_readings');
 }
 
-app.use(cors());
-app.use(express.json({ limit: '50mb' })); // allow large audio payloads
-
 // --- Gemini / SOAP note setup ---
-
-// Try both GOOGLE_API_KEY and GEMINI_API_KEY for convenience
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   console.error('❌ Missing GOOGLE_API_KEY or GEMINI_API_KEY in environment.');
-  console.error('   Example (PowerShell):  $env:GOOGLE_API_KEY = "YOUR_KEY_HERE"');
+  console.error('   Add it in your Render dashboard under Environment Variables');
   process.exit(1);
 }
 
-// Create the Google GenAI client (Node SDK)
 const ai = new GoogleGenAI({
   apiKey: GEMINI_API_KEY,
 });
 
-// Optional: system prompt (for readability)
 const systemInstruction = `
 You are an expert clinical documentation assistant. 
 Your task is to analyze the provided doctor-patient conversation and extract a structured SOAP note.
@@ -87,7 +124,7 @@ Rules:
 // --- SOAP note generator using Gemini ---
 async function generateSoapNote(transcriptText) {
   if (!transcriptText || transcriptText.length < 10) {
-    console.warn('Transcript too short for SOAP note.');
+    console.warn('⚠️ Transcript too short for SOAP note.');
     return {
       patient_summary: 'Transcript too short for analysis.',
       subjective: [],
@@ -99,7 +136,6 @@ async function generateSoapNote(transcriptText) {
 
   console.log('🧠 Sending transcript to Gemini for SOAP note...');
 
-  // Build a single prompt that includes the rules + the transcript
   const prompt = `
 ${systemInstruction}
 
@@ -128,7 +164,7 @@ ${transcriptText}
     });
 
     const raw = response.text ?? '';
-    console.log('🔍 Raw Gemini response text:', raw);
+    console.log('📝 Raw Gemini response received');
 
     let json;
     try {
@@ -144,7 +180,6 @@ ${transcriptText}
       };
     }
 
-    // Be forgiving: fill in defaults if some fields are missing or wrong type
     const note = {
       patient_summary:
         typeof json.patient_summary === 'string'
@@ -163,7 +198,7 @@ ${transcriptText}
       plan: Array.isArray(json.plan) ? json.plan.map(String) : [],
     };
 
-    console.log('✅ SOAP note generated and normalized.');
+    console.log('✅ SOAP note generated successfully');
     return note;
   } catch (err) {
     console.error('❌ Gemini SOAP generation error:', err);
@@ -177,7 +212,9 @@ ${transcriptText}
   }
 }
 
-// --- API route: save visit + generate SOAP note ---
+// --- API Routes ---
+
+// Save visit + generate SOAP note
 app.post('/api/visits', async (req, res) => {
   try {
     const visitsCollection = await getVisitsCollection();
@@ -188,18 +225,17 @@ app.post('/api/visits', async (req, res) => {
       raw_transcript,
       audio_recording,
       audio_mime_type,
-      status, // optional from frontend
-      clinical_note, // optional from frontend (we’ll overwrite)
+      status,
+      clinical_note,
     } = req.body;
 
     if (!patient_id || !raw_transcript) {
       console.warn('⚠️ Missing required fields:', { patient_id, raw_transcript });
       return res
         .status(400)
-        .send('patient_id and raw_transcript are required');
+        .json({ ok: false, error: 'patient_id and raw_transcript are required' });
     }
 
-    // 1) Insert base visit document (raw transcript + audio)
     const baseDoc = {
       patient_id,
       timestamp: timestamp ? new Date(timestamp) : new Date(),
@@ -213,10 +249,8 @@ app.post('/api/visits', async (req, res) => {
     console.log('💾 Inserting visit into MongoDB...');
     const insertResult = await visitsCollection.insertOne(baseDoc);
 
-    // 2) Call Gemini to generate SOAP note from the transcript
     const note = await generateSoapNote(raw_transcript);
 
-    // 3) Update the same Mongo document with the SOAP note + final status
     await visitsCollection.updateOne(
       { _id: insertResult.insertedId },
       {
@@ -227,21 +261,23 @@ app.post('/api/visits', async (req, res) => {
       }
     );
 
-    console.log('✅ Visit updated with SOAP note.');
+    console.log('✅ Visit saved with SOAP note');
 
-    // 4) Return the ID + SOAP note to the frontend
     res.status(201).json({
       ok: true,
       id: insertResult.insertedId,
       clinical_note: note,
     });
   } catch (err) {
-    console.error('🔥 Error saving visit or generating SOAP note:', err);
-    res.status(500).send(err.message || 'Server error saving visit');
+    console.error('🔥 Error saving visit:', err);
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error saving visit' 
+    });
   }
 });
 
-// --- NEW: API route to fetch visits (for dashboard) ---
+// Fetch visits
 app.get('/api/visits', async (req, res) => {
   try {
     const visitsCollection = await getVisitsCollection();
@@ -254,18 +290,21 @@ app.get('/api/visits', async (req, res) => {
       .sort({ timestamp: -1 })
       .toArray();
 
+    console.log(`✅ Fetched ${visits.length} visits`);
     res.json({ ok: true, visits });
   } catch (err) {
     console.error('🔥 Error fetching visits:', err);
-    res.status(500).send(err.message || 'Server error fetching visits');
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error fetching visits' 
+    });
   }
 });
-
-// --- Patients API ---
 
 // Get all patients
 app.get('/api/patients', async (req, res) => {
   try {
+    console.log('📋 GET /api/patients - Fetching patients...');
     const patientsCollection = await getPatientsCollection();
 
     const docs = await patientsCollection
@@ -273,31 +312,31 @@ app.get('/api/patients', async (req, res) => {
       .sort({ createdAt: -1 })
       .toArray();
 
-    // Map Mongo docs to the shape your frontend expects
     const patients = docs.map((doc) => ({
       id: String(doc._id),
       name: doc.name,
       condition: doc.condition || 'N/A',
       riskStatus: doc.riskStatus || 'LOW',
-      adherence:
-        typeof doc.adherence === 'number' ? doc.adherence : 100,
+      adherence: typeof doc.adherence === 'number' ? doc.adherence : 100,
       lastBP: doc.lastBP || '—',
       lastCheck: doc.lastCheck || '—',
     }));
 
+    console.log(`✅ Returning ${patients.length} patients`);
     res.json({ ok: true, patients });
   } catch (err) {
     console.error('🔥 Error fetching patients:', err);
-    res
-      .status(500)
-      .send(err.message || 'Server error fetching patients');
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error fetching patients' 
+    });
   }
 });
-
 
 // Create a new patient
 app.post('/api/patients', async (req, res) => {
   try {
+    console.log('➕ POST /api/patients - Creating patient...');
     const { name, condition } = req.body;
 
     if (!name || !name.trim()) {
@@ -322,6 +361,7 @@ app.post('/api/patients', async (req, res) => {
 
     const result = await patientsCollection.insertOne(doc);
 
+    console.log(`✅ Patient created: ${doc.name}`);
     res.status(201).json({
       ok: true,
       patient: {
@@ -331,22 +371,24 @@ app.post('/api/patients', async (req, res) => {
     });
   } catch (err) {
     console.error('🔥 Error creating patient:', err);
-    res.status(500).send(err.message || 'Server error creating patient');
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error creating patient' 
+    });
   }
 });
 
-
-// --- NEW: Blood Pressure Readings API ---
-// Log a new BP reading (patient portal)
+// Log a new BP reading
 app.post('/api/bp-readings', async (req, res) => {
   try {
     const bpCollection = await getBpCollection();
     const { patient_id, systolic, diastolic, timestamp } = req.body;
 
     if (!patient_id || systolic == null || diastolic == null) {
-      return res
-        .status(400)
-        .send('patient_id, systolic, and diastolic are required');
+      return res.status(400).json({
+        ok: false,
+        error: 'patient_id, systolic, and diastolic are required'
+      });
     }
 
     const doc = {
@@ -357,21 +399,32 @@ app.post('/api/bp-readings', async (req, res) => {
     };
 
     const result = await bpCollection.insertOne(doc);
-    res.status(201).json({ ok: true, reading: { ...doc, _id: result.insertedId } });
+    console.log(`✅ BP reading saved for patient ${patient_id}`);
+    
+    res.status(201).json({ 
+      ok: true, 
+      reading: { ...doc, _id: result.insertedId } 
+    });
   } catch (err) {
     console.error('🔥 Error saving BP reading:', err);
-    res.status(500).send(err.message || 'Server error saving BP reading');
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error saving BP reading' 
+    });
   }
 });
 
-// Get latest BP reading per patient
+// Get latest BP reading
 app.get('/api/bp-readings/latest', async (req, res) => {
   try {
     const bpCollection = await getBpCollection();
     const { patient_id } = req.query;
 
     if (!patient_id) {
-      return res.status(400).send('patient_id is required');
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'patient_id is required' 
+      });
     }
 
     const reading = await bpCollection.findOne(
@@ -382,18 +435,24 @@ app.get('/api/bp-readings/latest', async (req, res) => {
     res.json({ ok: true, reading: reading || null });
   } catch (err) {
     console.error('🔥 Error fetching latest BP:', err);
-    res.status(500).send(err.message || 'Server error fetching latest BP');
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error fetching latest BP' 
+    });
   }
 });
 
-// Get BP trend data for chart
+// Get BP trend data
 app.get('/api/bp-readings/trend', async (req, res) => {
   try {
     const bpCollection = await getBpCollection();
     const { patient_id, limit } = req.query;
 
     if (!patient_id) {
-      return res.status(400).send('patient_id is required');
+      return res.status(400).json({ 
+        ok: false, 
+        error: 'patient_id is required' 
+      });
     }
 
     const max = Number(limit) || 30;
@@ -404,14 +463,46 @@ app.get('/api/bp-readings/trend', async (req, res) => {
       .limit(max)
       .toArray();
 
+    console.log(`✅ Fetched ${readings.length} BP readings for patient ${patient_id}`);
     res.json({ ok: true, readings });
   } catch (err) {
     console.error('🔥 Error fetching BP trend:', err);
-    res.status(500).send(err.message || 'Server error fetching BP trend');
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message || 'Server error fetching BP trend' 
+    });
   }
+});
+
+// 404 handler
+app.use((req, res) => {
+  console.log(`⚠️ 404 - Route not found: ${req.method} ${req.path}`);
+  res.status(404).json({
+    ok: false,
+    error: 'Route not found',
+    path: req.path,
+    method: req.method,
+    availableEndpoints: [
+      'GET /health',
+      'GET /api/patients',
+      'POST /api/patients',
+      'GET /api/visits',
+      'POST /api/visits'
+    ]
+  });
 });
 
 // --- Start server ---
 app.listen(PORT, () => {
-  console.log(`🚀 Server listening on http://localhost:${PORT}`);
+  console.log('='.repeat(50));
+  console.log('🚀 PulseRx Server Started');
+  console.log('='.repeat(50));
+  console.log(`📍 Port: ${PORT}`);
+  console.log(`🌐 URL: http://localhost:${PORT}`);
+  console.log(`🗄️  MongoDB: ${MONGO_URI.includes('mongodb+srv') ? 'MongoDB Atlas' : 'Local'}`);
+  console.log(`🤖 Gemini: ${GEMINI_API_KEY ? 'Configured' : 'Missing'}`);
+  console.log('='.repeat(50));
+  console.log('✅ Ready to accept requests');
+  console.log('📝 Try: curl http://localhost:' + PORT + '/health');
+  console.log('='.repeat(50));
 });
