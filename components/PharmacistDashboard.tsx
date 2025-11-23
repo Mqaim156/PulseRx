@@ -7,9 +7,9 @@ import VirtualNotetaker from './VirtualNotetaker';
 
 const API_BASE =
   // if you later add env vars for frontend, use them here
-  (window.location.hostname === 'localhost'
+  window.location.hostname === 'localhost'
     ? 'http://localhost:4000'
-    : 'https://pulserx.onrender.com');
+    : 'https://pulserx.onrender.com';
 
 
 // --- Types for visits / SOAP note coming from backend ---

@@ -3,9 +3,9 @@ import { ArrowRight, Lock, Mail, User, Briefcase } from 'lucide-react';
 
 const API_BASE =
   // if you later add env vars for frontend, use them here
-  (window.location.hostname === 'localhost'
+  window.location.hostname === 'localhost'
     ? 'http://localhost:4000'
-    : 'https://pulserx.onrender.com');
+    : 'https://pulserx.onrender.com';
 
 
 interface SignupProps {
