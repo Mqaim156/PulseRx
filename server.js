@@ -26,6 +26,18 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 
+// 🔧 Normalize any leading multiple slashes so //api/... becomes /api/...
+app.use((req, res, next) => {
+  if (req.path.startsWith('//')) {
+    const original = req.url;
+    const [path, query = ''] = original.split('?');
+    const normalizedPath = path.replace(/^\/+/, '/'); // //api -> /api
+    req.url = normalizedPath + (query ? `?${query}` : '');
+  }
+  next();
+});
+
+
 // --- Health Check Endpoint (Important for Render) ---
 app.get('/health', (req, res) => {
   res.json({ 
