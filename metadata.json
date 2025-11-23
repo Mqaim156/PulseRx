@@ -1,0 +1,7 @@
+{
+  "name": "PulseRx",
+  "description": "A pharmacy-led chronic disease care platform featuring patient adherence tracking, vital logging, and AI-powered consultation notes.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
