@@ -12,7 +12,8 @@ const PORT = 4000;
 
 // --- MongoDB setup ---
 const MONGO_URI =
-  'mongodb+srv://hackrx:hackrx5624@cluster0.sxixgk7.mongodb.net/?appName=Cluster0'; // your URI
+  process.env.MONGO_URI;
+
 const client = new MongoClient(MONGO_URI);
 
 // Helper to get the patients collection
