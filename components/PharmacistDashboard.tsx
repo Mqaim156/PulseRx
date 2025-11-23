@@ -80,7 +80,7 @@ const PharmacistDashboard: React.FC = () => {
     try {
       setSavingPatient(true);
 
-      const res = await fetch('${API_BASE}/api/patients', {
+      const res = await fetch(`${API_BASE}/api/patients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

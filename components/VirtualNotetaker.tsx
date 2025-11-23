@@ -134,7 +134,7 @@ const VirtualNotetaker: React.FC<VirtualNotetakerProps> = ({
 
     try {
       // Save visit + transcript to backend (no audio, just text)
-      const res = await fetch('${API_BASE}/api/visits', {
+      const res = await fetch(`${API_BASE}/api/visits`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

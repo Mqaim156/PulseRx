@@ -27,7 +27,7 @@ const Signup: React.FC<SignupProps> = ({ onLogin, onNavigateLogin }) => {
     try {
         // If a patient is signing up, also create a patient record
         if (role === 'patient') {
-        await fetch('${API_BASE}/api/patients', {
+        await fetch(`${API_BASE}/api/patients`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
