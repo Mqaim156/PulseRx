@@ -13,7 +13,8 @@ const PORT = process.env.PORT || 4000;
 // --- CORS Configuration (MUST come BEFORE routes) ---
 const corsOptions = {
   origin: [
-    'https://mqaim156.github.io',  // ⚠️ REPLACE with your actual GitHub Pages URL
+    'https://mqaim156.github.io',
+    'https://mqaim156.github.io/PulseRx',  // Subdirectory ⭐ ADD THIS
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:4173'
