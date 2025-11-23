@@ -56,8 +56,9 @@ const PharmacistDashboard: React.FC = () => {
       setPatientsLoading(true);
       setPatientsError(null);
       try {
-        const res = await fetch(`${API_BASE}/api/patients`);
-        console.log('🔍 Response status:', res.status);
+        const url = `${API_BASE}/api/patients`;
+        console.log('🔍 About to fetch from:', url);  // ADD THIS
+        const res = await fetch(url);
         if (!res.ok) {
           const text = await res.text();
           throw new Error(text || `Request failed with status ${res.status}`);
