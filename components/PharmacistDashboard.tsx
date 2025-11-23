@@ -5,6 +5,13 @@ import { MARIA_BP_DATA } from '../constants';
 import { Patient } from '../types';
 import VirtualNotetaker from './VirtualNotetaker';
 
+const API_BASE =
+  // if you later add env vars for frontend, use them here
+  (window.location.hostname === 'localhost'
+    ? 'http://localhost:4000'
+    : 'https://pulserx.onrender.com/');
+
+
 // --- Types for visits / SOAP note coming from backend ---
 interface ClinicalNote {
   patient_summary: string;
@@ -47,7 +54,7 @@ const PharmacistDashboard: React.FC = () => {
       setPatientsLoading(true);
       setPatientsError(null);
       try {
-        const res = await fetch('http://localhost:4000/api/patients');
+        const res = await fetch(`${API_BASE}/api/patients`);
         if (!res.ok) {
           const text = await res.text();
           throw new Error(text || `Request failed with status ${res.status}`);
@@ -193,8 +200,9 @@ const PharmacistDashboard: React.FC = () => {
         setError(null);
         try {
           const res = await fetch(
-            `http://localhost:4000/api/visits?patient_id=${encodeURIComponent(patientName)}`,
+            `${API_BASE}/api/visits?patient_id=${encodeURIComponent(patientName)}`
           );
+
           if (!res.ok) {
             const text = await res.text();
             throw new Error(text || `Request failed with status ${res.status}`);
