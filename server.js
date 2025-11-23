@@ -8,11 +8,12 @@ import { GoogleGenAI } from '@google/genai';
 
 // --- Basic app setup ---
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 // --- MongoDB setup ---
 const MONGO_URI =
-  process.env.MONGO_URI;
+  process.env.MONGO_URI ||
+  'mongodb+srv://hackrx:hackrx5624@cluster0.sxixgk7.mongodb.net/?appName=Cluster0';
 
 const client = new MongoClient(MONGO_URI);
 
