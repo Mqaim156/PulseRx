@@ -394,7 +394,7 @@ const PharmacistDashboard: React.FC = () => {
         setError(null);
         try {
           const res = await fetch(
-            `${API_BASE}api/visits?patient_id=${encodeURIComponent(patientName)}`,
+            `${API_BASE}/api/visits?patient_id=${encodeURIComponent(patientName)}`,
           );
           if (!res.ok) {
             const text = await res.text();
