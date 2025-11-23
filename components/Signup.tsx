@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Lock, Mail, User, Briefcase } from 'lucide-react';
 
-const API_BASE = (
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:4000'
-    : 'https://pulserx.onrender.com'
-).replace(/\/$/, ''); // Remove trailing slash if exists
+const API_BASE = 'https://pulserx.onrender.com'.replace(/\/$/, '');
 
 interface SignupProps {
   onLogin: (role: 'patient' | 'pharmacist') => void;
