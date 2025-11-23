@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { ArrowRight, Lock, Mail, User, Briefcase } from 'lucide-react';
 
+const API_BASE =
+  // if you later add env vars for frontend, use them here
+  (window.location.hostname === 'localhost'
+    ? 'http://localhost:4000'
+    : 'https://pulserx.onrender.com');
+
+
 interface SignupProps {
   onLogin: (role: 'patient' | 'pharmacist') => void;
   onNavigateLogin: () => void;
@@ -20,7 +27,7 @@ const Signup: React.FC<SignupProps> = ({ onLogin, onNavigateLogin }) => {
     try {
         // If a patient is signing up, also create a patient record
         if (role === 'patient') {
-        await fetch('http://localhost:4000/api/patients', {
+        await fetch('${API_BASE}/api/patients', {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',

@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, Square, Loader2, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 
+const API_BASE =
+  // if you later add env vars for frontend, use them here
+  (window.location.hostname === 'localhost'
+    ? 'http://localhost:4000'
+    : 'https://pulserx.onrender.com');
+
+
 interface VirtualNotetakerProps {
   patientName: string;
   onAnalysisStatusChange?: (
@@ -127,7 +134,7 @@ const VirtualNotetaker: React.FC<VirtualNotetakerProps> = ({
 
     try {
       // Save visit + transcript to backend (no audio, just text)
-      const res = await fetch('http://localhost:4000/api/visits', {
+      const res = await fetch('${API_BASE}/api/visits', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
