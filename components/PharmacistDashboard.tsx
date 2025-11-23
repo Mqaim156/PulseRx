@@ -5,11 +5,11 @@ import { MARIA_BP_DATA } from '../constants';
 import { Patient } from '../types';
 import VirtualNotetaker from './VirtualNotetaker';
 
-const API_BASE =
-  // if you later add env vars for frontend, use them here
+const API_BASE = (
   window.location.hostname === 'localhost'
     ? 'http://localhost:4000'
-    : 'https://pulserx.onrender.com';
+    : 'https://pulserx.onrender.com'
+).replace(/\/$/, ''); // Remove trailing slash if exists
 
 
 // --- Types for visits / SOAP note coming from backend ---

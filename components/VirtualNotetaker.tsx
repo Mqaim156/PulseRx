@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, Square, Loader2, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 
-const API_BASE =
-  // if you later add env vars for frontend, use them here
+const API_BASE = (
   window.location.hostname === 'localhost'
     ? 'http://localhost:4000'
-    : 'https://pulserx.onrender.com';
-
+    : 'https://pulserx.onrender.com'
+).replace(/\/$/, ''); // Remove trailing slash if exists
 
 interface VirtualNotetakerProps {
   patientName: string;
