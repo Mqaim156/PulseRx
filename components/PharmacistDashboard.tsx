@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Plus, FileText, Loader2 } from 'lucide-react';
+import { api_config } from "../Actions";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { MARIA_BP_DATA } from '../constants';
 import { Patient } from '../types';
@@ -51,7 +52,7 @@ const PharmacistDashboard: React.FC = () => {
       setPatientsLoading(true);
       setPatientsError(null);
       try {
-        const url = `${API_BASE}/api/patients`;
+        const url = `${api_config.api_base_url}/api/patients`;
         console.log('🔍 About to fetch from:', url);  // ADD THIS
         const res = await fetch(url);
         if (!res.ok) {
@@ -80,7 +81,7 @@ const PharmacistDashboard: React.FC = () => {
     try {
       setSavingPatient(true);
 
-      const res = await fetch(`${API_BASE}/api/patients`, {
+      const res = await fetch(`${api_config.api_base_url}/api/patients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
