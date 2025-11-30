@@ -71,8 +71,7 @@ app.get('/', (req, res) => {
 
 // --- MongoDB setup ---
 const MONGO_URI =
-  process.env.MONGO_URI ||
-  'mongodb+srv://hackrx:hackrx5624@cluster0.sxixgk7.mongodb.net/?appName=Cluster0';
+  process.env.MONGO_URI;
 
 const client = new MongoClient(MONGO_URI);
 
@@ -107,7 +106,7 @@ async function getBpCollection() {
 }
 
 // --- Gemini / SOAP note setup ---
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   console.error('❌ Missing GOOGLE_API_KEY or GEMINI_API_KEY in environment.');

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, Square, Loader2, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { api_config } from "../Actions";
 
-const API_BASE = 'http://localhost:4000';
 interface VirtualNotetakerProps {
   patientName: string;
   onAnalysisStatusChange?: (
@@ -128,7 +128,7 @@ const VirtualNotetaker: React.FC<VirtualNotetakerProps> = ({
 
     try {
       // Save visit + transcript to backend (no audio, just text)
-      const res = await fetch(`${API_BASE}/api/visits`, {
+      const res = await fetch(`${api_config.api_base_url}/api/visits`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -283,7 +283,7 @@ const VirtualNotetaker: React.FC<VirtualNotetakerProps> = ({
             ? 'Saved to visits and sent for AI SOAP note.'
             : status === 'recording'
             ? 'Speak naturally; we’ll capture the conversation.'
-            : 'Model: browser speech recognition → Gemini SOAP note.'}
+            : 'Model: browser speech recognition →  SOAP note.'}
         </p>
       </div>
     </div>

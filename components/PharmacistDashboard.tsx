@@ -6,10 +6,6 @@ import { MARIA_BP_DATA } from '../constants';
 import { Patient } from '../types';
 import VirtualNotetaker from './VirtualNotetaker';
 
-const API_BASE = 'http://localhost:4000';
-console.log('🔍 API_BASE is set to:', API_BASE);
-console.log('🔍 Full patients URL will be:', `${API_BASE}/api/patients`);
-
 // --- Types for visits / SOAP note coming from backend ---
 interface ClinicalNote {
   patient_summary: string;
@@ -201,7 +197,7 @@ const PharmacistDashboard: React.FC = () => {
         setError(null);
         try {
           const res = await fetch(
-            `${API_BASE}/api/visits?patient_id=${encodeURIComponent(patientName)}`
+            `${api_config.api_base_url}/api/visits?patient_id=${encodeURIComponent(patientName)}`
           );
 
           if (!res.ok) {
@@ -395,7 +391,7 @@ const PharmacistDashboard: React.FC = () => {
         setError(null);
         try {
           const res = await fetch(
-            `${API_BASE}/api/visits?patient_id=${encodeURIComponent(patientName)}`,
+            `${api_config.api_base_url}/api/visits?patient_id=${encodeURIComponent(patientName)}`,
           );
           if (!res.ok) {
             const text = await res.text();

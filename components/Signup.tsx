@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Lock, Mail, User, Briefcase } from 'lucide-react';
-
-const API_BASE = 'http://localhost:4000';
+import { api_config } from "../Actions";
 interface SignupProps {
   onLogin: (role: 'patient' | 'pharmacist') => void;
   onNavigateLogin: () => void;
@@ -21,7 +20,7 @@ const Signup: React.FC<SignupProps> = ({ onLogin, onNavigateLogin }) => {
     try {
         // If a patient is signing up, also create a patient record
         if (role === 'patient') {
-        await fetch(`${API_BASE}/api/patients`, {
+        await fetch(`${api_config.api_base_url}/api/patients`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
